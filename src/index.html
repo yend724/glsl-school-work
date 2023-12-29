@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      h1 {
+        position: absolute;
+        top: 0;
+        left: 0;
+        visibility: hidden;
+      }
+      canvas {
+        position: relative;
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1;
+      }
+    </style>
+    <script type="module" src="/assets/js/main.ts"></script>
+  </head>
+  <body>
+    <h1>GLSLスクール</h1>
+    <canvas id="webgl"></canvas>
+  </body>
+</html>
