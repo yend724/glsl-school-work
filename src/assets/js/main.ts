@@ -98,10 +98,10 @@ const init = () => {
   onResize();
   window.addEventListener('resize', onResize);
 
-  const startTime = performance.now();
+  // const startTime = performance.now();
   const loop = () => {
     requestAnimationFrame(loop);
-    const elapsedTime = performance.now() - startTime;
+    // const elapsedTime = performance.now() - startTime;
     // box.material.uniforms.uTime.value = elapsedTime;
 
     controls.update();
