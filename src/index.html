@@ -18,11 +18,21 @@
         height: 100vh;
         z-index: 1;
       }
+      #button {
+        position: absolute;
+        bottom: 1rem;
+        left: 1rem;
+        background-color: aliceblue;
+        color: black;
+        padding: 1rem;
+        z-index: 2;
+      }
     </style>
     <script type="module" src="/assets/js/main.ts"></script>
   </head>
   <body>
     <h1>GLSLスクール</h1>
     <canvas id="webgl"></canvas>
+    <button id="button">change animal</button>
   </body>
 </html>
