@@ -41,8 +41,8 @@ const init = async () => {
   light.position.set(1, 1, 1);
   scene.add(light);
 
-  const planeGeometry = new THREE.BoxGeometry(2, 2, 2);
-  const planeMaterial = new THREE.ShaderMaterial({
+  const boxGeometry = new THREE.BoxGeometry(2, 2, 2);
+  const boxMaterial = new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0.0 },
       uDuration: { value: PARAMS._duration },
@@ -52,16 +52,16 @@ const init = async () => {
     vertexShader: VertexShader,
   });
 
-  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-  scene.add(plane);
+  const box = new THREE.Mesh(boxGeometry, boxMaterial);
+  scene.add(box);
 
   const startTime = performance.now();
   const loop = () => {
     requestAnimationFrame(loop);
     const elapsedTime = performance.now() - startTime;
 
-    plane.material.uniforms.uTime.value = elapsedTime;
-    plane.material.uniforms.uDuration.value = PARAMS._duration;
+    box.material.uniforms.uTime.value = elapsedTime;
+    box.material.uniforms.uDuration.value = PARAMS._duration;
 
     renderer.setClearColor(0x222222, 1.0);
     renderer.render(scene, camera);
