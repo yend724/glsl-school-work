@@ -61,14 +61,12 @@ const init = async () => {
 
   //レンダーターゲットオブジェクト
   const renderTarget = new THREE.WebGLRenderTarget(1024, 1024);
-  const renderTarget2 = new THREE.WebGLRenderTarget(1024, 1024);
 
   //スクリーン用の平面
   const planeGeometry = new THREE.PlaneGeometry(4, 4, 2, 2);
   const planeMaterial = new THREE.ShaderMaterial({
     uniforms: {
       uTexture1: { value: renderTarget.texture },
-      uTexture2: { value: renderTarget2.texture },
       uTime: { value: 0.0 },
       uDuration: { value: PARAMS._duration },
     },
@@ -86,7 +84,7 @@ const init = async () => {
           return texture2D(uTexture1, uv);
         }
         vec4 getToColor(vec2 uv){
-          return texture2D(uTexture2, uv);
+          return texture2D(uTexture1, uv);
         }
 
         void main() {
@@ -234,6 +232,8 @@ const init = async () => {
     points.material.uniforms.uTime.value = elapsedTime;
     points.material.uniforms.uDuration.value = PARAMS._duration;
 
+    points.rotation.y += 0.001;
+
     plane.material.uniforms.uTime.value = elapsedTime;
     plane.material.uniforms.uDuration.value = PARAMS._duration;
 
@@ -243,13 +243,8 @@ const init = async () => {
     renderer.render(sceneOffscreen, cameraOffscreen);
     renderer.setRenderTarget(null);
 
-    renderer.setClearColor(0x00000, 1.0);
-    renderer.setRenderTarget(renderTarget2);
-    renderer.render(sceneOffscreen, cameraOffscreen);
-    renderer.setRenderTarget(null);
-
     //レンダリング
-    renderer.setClearColor(0xffffff, 1.0);
+    renderer.setClearColor(0x222222, 1.0);
     renderer.render(scene, camera);
 
     controls.update();
