@@ -5,7 +5,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Pane } from 'tweakpane';
 import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js';
 import FragmentShader from '../shader/fragment.frag?raw';
+import FragmentShader2 from '../shader/fragment2.frag?raw';
 import VertexShader from '../shader/vertex.vert?raw';
+import VertexShader2 from '../shader/vertex2.vert?raw';
 import Mesh_Elephant from '../obj/Mesh_Elephant.obj?url';
 import Mesh_Orca from '../obj/Mesh_Orca.obj?url';
 import Mesh_Penguin from '../obj/Mesh_Penguin.obj?url';
@@ -41,15 +43,10 @@ const init = async () => {
 
   const fov = 60;
   const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000);
-  camera.position.set(0, 0, 5);
+  camera.position.set(5, 5, 5);
 
-  const cameraOffscreen = new THREE.PerspectiveCamera(
-    fov,
-    width / height,
-    0.1,
-    1000
-  );
-  cameraOffscreen.position.set(100, 200, 300);
+  const cameraOffscreen = camera.clone();
+  cameraOffscreen.position.set(200, 200, 200);
   cameraOffscreen.lookAt(sceneOffscreen.position);
   cameraOffscreen.aspect = 1.0;
 
@@ -63,54 +60,18 @@ const init = async () => {
   const renderTarget = new THREE.WebGLRenderTarget(1024, 1024);
 
   //スクリーン用の平面
-  const planeGeometry = new THREE.PlaneGeometry(4, 4, 2, 2);
+  const planeGeometry = new THREE.BoxGeometry(2, 2, 2);
   const planeMaterial = new THREE.ShaderMaterial({
     uniforms: {
       uTexture1: { value: renderTarget.texture },
       uTime: { value: 0.0 },
       uDuration: { value: PARAMS._duration },
     },
-    fragmentShader: `
-        uniform float uDuration;
-        uniform sampler2D uTexture1;
-        uniform sampler2D uTexture2;
-        varying vec2 vUv;
-        varying vec3 vPosition;
-
-        float amplitude = 30.0;
-        float speed = 10.0;
-
-        vec4 getFromColor(vec2 uv){
-          return texture2D(uTexture1, uv);
-        }
-        vec4 getToColor(vec2 uv){
-          return texture2D(uTexture1, uv);
-        }
-
-        void main() {
-          float progress = uDuration;
-          vec2 dir = vUv - vec2(.5);
-          float dist = length(dir);
-
-          vec2 p = vUv;
-
-          if (dist > progress) {
-            gl_FragColor = mix(getFromColor(p), getToColor(p), progress);
-          } else {
-            vec2 offset = dir * sin(dist * amplitude - progress * speed);
-            gl_FragColor = mix(getFromColor(p + offset), getToColor(p), progress);
-          }
-        }
-      `,
-    vertexShader: `
-        varying vec2 vUv;
-        varying vec3 vPosition;
-        void main() {
-          vUv = uv;
-          vPosition = position;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
+    transparent: true,
+    side: THREE.DoubleSide,
+    fragmentShader: FragmentShader2,
+    vertexShader: VertexShader2,
+    depthTest: false,
   });
 
   const plane = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -143,7 +104,10 @@ const init = async () => {
     transparent: true,
   });
 
-  const nextIndex = (index: number, dir: 'next' | 'prev') => {
+  const nextIndex = (index: number, dir: 'next' | 'prev' | 'current') => {
+    if (dir === 'current') {
+      return index;
+    }
     if (dir === 'next') {
       return (index + 1) % animalObjects.length;
     }
@@ -157,8 +121,7 @@ const init = async () => {
     dir: 'next' | 'prev' | 'current';
   }) => {
     group.remove(points);
-    activeAnimalIndex =
-      dir === 'current' ? activeAnimalIndex : nextIndex(activeAnimalIndex, dir);
+    activeAnimalIndex = nextIndex(activeAnimalIndex, dir);
     const activeAnimal = animalObjects[activeAnimalIndex];
     const nextAnimalMesh = activeAnimal.object.children[0] as THREE.Mesh;
     const objMaterial = new THREE.MeshBasicMaterial({
@@ -229,16 +192,16 @@ const init = async () => {
   const loop = () => {
     requestAnimationFrame(loop);
     const elapsedTime = performance.now() - startTime;
+
     points.material.uniforms.uTime.value = elapsedTime;
     points.material.uniforms.uDuration.value = PARAMS._duration;
-
     points.rotation.y += 0.001;
 
     plane.material.uniforms.uTime.value = elapsedTime;
     plane.material.uniforms.uDuration.value = PARAMS._duration;
 
     //オフスクリーンレンダリング
-    renderer.setClearColor(0x000000, 1.0);
+    renderer.setClearColor(0x000000, 0.0);
     renderer.setRenderTarget(renderTarget);
     renderer.render(sceneOffscreen, cameraOffscreen);
     renderer.setRenderTarget(null);
