@@ -10,7 +10,6 @@ import VertexShader from '../shader/vertex.vert?raw';
 import Mesh_Elephant from '../obj/Mesh_Elephant.obj?url';
 import Mesh_Orca from '../obj/Mesh_Orca.obj?url';
 import Mesh_Rabbit from '../obj/Mesh_Rabbit.obj?url';
-
 // import { gsap } from 'gsap';
 
 const animalChangeTrigger =
@@ -72,16 +71,25 @@ const init = async () => {
   });
 
   const scene = new THREE.Scene();
+  const sceneRTT = new THREE.Scene();
 
   const fov = 60;
-
   const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000);
-  camera.position.set(300, 300, 300);
+  camera.position.set(0, 0, 5);
+
+  const cameraRTT = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000);
+  cameraRTT.position.set(250, 250, 250);
+  cameraRTT.lookAt(sceneRTT.position);
+  cameraRTT.aspect = 1.0;
 
   const controls = new OrbitControls(camera, renderer.domElement);
 
   const group = new THREE.Group();
-  scene.add(group);
+  sceneRTT.add(group);
+
+  const light = new THREE.DirectionalLight(0xffffff);
+  light.position.set(1, 1, 1);
+  scene.add(light);
 
   const scale = 1.0;
   const animalObjects = await Promise.all([
@@ -171,6 +179,33 @@ const init = async () => {
     group.add(points);
   });
 
+  //レンダーターゲットオブジェクト
+  const renderTarget = new THREE.WebGLRenderTarget(1024, 1024);
+
+  //スクリーン用の平面
+  const planeGeometry = new THREE.PlaneGeometry(4, 4, 2, 2);
+  const planeMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      uTexture: { value: renderTarget.texture },
+    },
+    fragmentShader: `
+      uniform sampler2D uTexture;
+      varying vec2 vUv;
+      void main() {
+        gl_FragColor = texture2D(uTexture, vUv);
+      }
+    `,
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+  });
+  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  scene.add(plane);
+
   const onResize = () => {
     const { width, height } = getWindow();
 
@@ -179,6 +214,9 @@ const init = async () => {
 
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+
+    cameraRTT.aspect = 1;
+    cameraRTT.updateProjectionMatrix();
   };
   onResize();
   window.addEventListener('resize', onResize);
@@ -190,8 +228,17 @@ const init = async () => {
     points.material.uniforms.uTime.value = elapsedTime;
     points.material.uniforms.uDuration.value = PARAMS._duration;
 
-    controls.update();
+    //オフスクリーンレンダリング
+    renderer.setClearColor(0x000000, 1.0);
+    renderer.setRenderTarget(renderTarget);
+    renderer.render(sceneRTT, cameraRTT);
+    renderer.setRenderTarget(null);
+
+    //レンダリング
+    renderer.setClearColor(0xffffff, 1.0);
     renderer.render(scene, camera);
+
+    controls.update();
   };
   loop();
 };
