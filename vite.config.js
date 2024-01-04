@@ -5,5 +5,10 @@ export default defineConfig({
   build: {
     outDir: '../dist',
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        '01': './src/01/index.html',
+      },
+    },
   },
 });

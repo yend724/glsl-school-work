@@ -1,8 +1,11 @@
 import 'destyle.css';
+import '/assets/css/common.css';
 import '../css/style.css';
+
+import { gsap } from 'gsap';
+import { Pane } from 'tweakpane';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Pane } from 'tweakpane';
 import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js';
 import FragmentShader from '../shader/fragment.frag?raw';
 import FragmentShader2 from '../shader/fragment2.frag?raw';
@@ -13,7 +16,6 @@ import Mesh_Orca from '../obj/Mesh_Orca.obj?url';
 import Mesh_Penguin from '../obj/Mesh_Penguin.obj?url';
 import { getWindow, getCanvas, getElements } from './utils';
 import { loadObj } from './webgl';
-import { gsap } from 'gsap';
 
 const animalChangeTriggers = getElements<HTMLButtonElement>(
   'button[data-animal-change-dir'
