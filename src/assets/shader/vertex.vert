@@ -8,11 +8,11 @@ float rand(vec3 co){
 }
 
 void main() {
-  float scale = 1.0 - uDuration;
+  float scale = uDuration;
   mat4 mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
-  vDistortion = scale * rand(position) * 5.0 + scale * 1.0;
+  vDistortion = scale * rand(position);
   gl_Position = mvpMatrix * vec4(position * (vDistortion + 1.0), 1.0);
-  gl_PointSize = 4.0;
+  gl_PointSize = 2.0;
   vUv = uv;
   vPosition = position;
 }
