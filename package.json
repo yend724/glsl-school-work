@@ -14,9 +14,11 @@
   },
   "dependencies": {
     "@tweakpane/core": "^2.0.3",
+    "@types/p5": "^1.7.6",
     "@types/three": "^0.160.0",
     "destyle.css": "^4.0.0",
     "gsap": "^3.12.4",
+    "p5": "^1.9.0",
     "three": "^0.160.0",
     "tweakpane": "^4.0.3"
   }
