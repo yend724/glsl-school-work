@@ -8,22 +8,23 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import FragmentShader from '../shader/fragment.frag?raw';
 import VertexShader from '../shader/vertex.vert?raw';
-import Picture from '../img/pic.png';
+import DogImg from '../img/dog.png';
+import CatImg from '../img/cat.png';
 import { getWindow, getCanvas, getElement } from './utils';
 import p5 from 'p5';
 
 const sketch = (p: p5) => {
-  const inputText = 'GLSL School';
+  const inputText = 'Cat';
 
-  const fontSizeMax = 20;
+  const fontSizeMax = 16;
   const fontSizeMin = 8;
-  const spacing = 8; // line height
-  const kerning = 0.6; // between letters
+  const spacing = 4; // line height
+  const kerning = 0.5; // between letters
 
   let img: p5.Image;
 
   p.preload = () => {
-    img = p.loadImage(Picture);
+    img = p.loadImage(CatImg);
   };
 
   p.setup = () => {
@@ -86,13 +87,13 @@ new p5(sketch);
 const webglInit = async () => {
   const pane = new Pane();
   const PARAMS = {
-    _duration: 0.0,
+    progress: 0.0,
   };
-  pane.addBinding(PARAMS, '_duration', {
+  pane.addBinding(PARAMS, 'progress', {
     slider: true,
     min: 0,
     max: 1,
-    label: 'duration',
+    label: 'progress',
   });
 
   const { width, height } = getWindow();
@@ -106,7 +107,7 @@ const webglInit = async () => {
 
   const fov = 60;
   const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000);
-  camera.position.set(0, 0, 400);
+  camera.position.set(0, 0, 200);
 
   const controls = new OrbitControls(camera, renderer.domElement);
 
@@ -152,6 +153,9 @@ const webglInit = async () => {
       uTime: {
         value: 0.0,
       },
+      uProgress: {
+        value: PARAMS.progress,
+      },
     },
     vertexShader: VertexShader,
     fragmentShader: FragmentShader,
@@ -185,11 +189,12 @@ const webglInit = async () => {
   scene.add(instancedMesh);
 
   for (let i = 0; i < vertices.length; i += 1) {
-    dummy.position.set(
-      (vertices[i].x - 50) / 2,
-      (vertices[i].y + 50) / 2,
-      vertices[i].z
-    );
+    const position = {
+      x: vertices[i].x - 50,
+      y: vertices[i].y + 50,
+      z: vertices[i].z,
+    };
+    dummy.position.set(position.x, position.y, position.z);
     dummy.updateMatrix();
 
     const color = new THREE.Color(colors[i].r, colors[i].g, colors[i].b);
@@ -203,6 +208,7 @@ const webglInit = async () => {
     requestAnimationFrame(loop);
     const elapsedTime = performance.now() - startTime;
     particleMaterial.uniforms.uTime.value = elapsedTime * 0.001;
+    particleMaterial.uniforms.uProgress.value = PARAMS.progress;
 
     renderer.setClearColor(0xcccccc, 1.0);
     renderer.render(scene, camera);
