@@ -15,10 +15,10 @@ import p5 from 'p5';
 const sketch = (p: p5) => {
   const inputText = 'GLSL School';
 
-  const fontSizeMax = 16;
+  const fontSizeMax = 20;
   const fontSizeMin = 8;
   const spacing = 8; // line height
-  const kerning = 0.5; // between letters
+  const kerning = 0.6; // between letters
 
   let img: p5.Image;
 
@@ -129,9 +129,9 @@ const webglInit = async () => {
     y: number;
   }[] = [];
   let textureColors: { r: number; g: number; b: number }[] = [];
-  const dotscale = 1;
-  for (let x = 0; x < imgData.width; x += dotscale) {
-    for (let y = 0; y < imgData.height; y += dotscale) {
+  const dotScale = 1;
+  for (let x = 0; x < imgData.width; x += dotScale) {
+    for (let y = 0; y < imgData.height; y += dotScale) {
       const i = (y * imgData.width + x) * 4;
       const r = imgData.data[i];
       const g = imgData.data[i + 1];
@@ -146,8 +146,13 @@ const webglInit = async () => {
   }
 
   const dummy = new THREE.Object3D();
-  const particleGeometry = new THREE.IcosahedronGeometry(0.8, 0);
+  const particleGeometry = new THREE.IcosahedronGeometry(0.4, 0);
   const particleMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: {
+        value: 0.0,
+      },
+    },
     vertexShader: VertexShader,
     fragmentShader: FragmentShader,
     side: THREE.DoubleSide,
@@ -180,7 +185,11 @@ const webglInit = async () => {
   scene.add(instancedMesh);
 
   for (let i = 0; i < vertices.length; i += 1) {
-    dummy.position.set(vertices[i].x - 50, vertices[i].y + 50, vertices[i].z);
+    dummy.position.set(
+      (vertices[i].x - 50) / 2,
+      (vertices[i].y + 50) / 2,
+      vertices[i].z
+    );
     dummy.updateMatrix();
 
     const color = new THREE.Color(colors[i].r, colors[i].g, colors[i].b);
@@ -189,10 +198,11 @@ const webglInit = async () => {
     instancedMesh.setColorAt(i, color);
   }
 
-  // const startTime = performance.now();
+  const startTime = performance.now();
   const loop = () => {
     requestAnimationFrame(loop);
-    // const elapsedTime = performance.now() - startTime;
+    const elapsedTime = performance.now() - startTime;
+    particleMaterial.uniforms.uTime.value = elapsedTime * 0.001;
 
     renderer.setClearColor(0xcccccc, 1.0);
     renderer.render(scene, camera);
@@ -216,4 +226,4 @@ const webglInit = async () => {
 
 setTimeout(() => {
   webglInit();
-}, 500);
+}, 100);
