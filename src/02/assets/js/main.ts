@@ -17,8 +17,8 @@ const sketch = (p: p5) => {
 
   const fontSizeMax = 16;
   const fontSizeMin = 8;
-  const spacing = 12; // line height
-  const kerning = 1.0; // between letters
+  const spacing = 8; // line height
+  const kerning = 0.5; // between letters
 
   let img: p5.Image;
 
@@ -27,7 +27,7 @@ const sketch = (p: p5) => {
   };
 
   p.setup = () => {
-    const canvas = p.createCanvas(400, 602);
+    const canvas = p.createCanvas(200, 200);
     canvas.parent('p5js-canvas');
     p.textFont('Times');
     p.textSize(10);
@@ -105,8 +105,8 @@ const webglInit = async () => {
   const scene = new THREE.Scene();
 
   const fov = 60;
-  const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 3000);
-  camera.position.set(0, 0, 500);
+  const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000);
+  camera.position.set(0, 0, 400);
 
   const controls = new OrbitControls(camera, renderer.domElement);
 
@@ -116,7 +116,7 @@ const webglInit = async () => {
 
   const textCanvas = getElement<HTMLCanvasElement>('#p5js-canvas > canvas');
   const textCanvasCtx = textCanvas.getContext('2d')!;
-  const texture = new THREE.CanvasTexture(textCanvas);
+  // const texture = new THREE.CanvasTexture(textCanvas);
 
   const imgData = textCanvasCtx.getImageData(
     0,
@@ -129,76 +129,70 @@ const webglInit = async () => {
     y: number;
   }[] = [];
   let textureColors: { r: number; g: number; b: number }[] = [];
-  for (let x = 0; x < imgData.width; x++) {
-    for (let y = 0; y < imgData.height; y++) {
+  const dotscale = 1;
+  for (let x = 0; x < imgData.width; x += dotscale) {
+    for (let y = 0; y < imgData.height; y += dotscale) {
       const i = (y * imgData.width + x) * 4;
       const r = imgData.data[i];
       const g = imgData.data[i + 1];
       const b = imgData.data[i + 2];
-      // const a = imgData.data[i + 3];
-      // const greyscale = p.round(
-      //   p.red(c) * 0.222 + p.green(c) * 0.707 + p.blue(c) * 0.071
-      // );
-      textureCoordinates.push({ x: x / 2, y: y / 2 });
+
+      const greyscale = r * 0.222 + g * 0.707 + b * 0.071;
+      if (greyscale > 254) continue;
+
+      textureCoordinates.push({ x, y });
       textureColors.push({ r, g, b });
     }
   }
 
-  // const planeGeometry = new THREE.PlaneGeometry(
-  //   textCanvas.width * 0.2,
-  //   textCanvas.height * 0.2
-  // );
-  // const planeMaterial = new THREE.ShaderMaterial({
-  //   uniforms: {
-  //     uTexture: { value: texture },
-  //     uTime: { value: 0.0 },
-  //     uDuration: { value: PARAMS._duration },
-  //   },
-  //   transparent: true,
-  //   fragmentShader: FragmentShader,
-  //   vertexShader: VertexShader,
-  //   side: THREE.DoubleSide,
-  // });
-
-  // const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-  // scene.add(plane);
-
-  const geometry = new THREE.BufferGeometry();
-  const material = new THREE.ShaderMaterial({
+  const dummy = new THREE.Object3D();
+  const particleGeometry = new THREE.IcosahedronGeometry(0.8, 0);
+  const particleMaterial = new THREE.ShaderMaterial({
     vertexShader: VertexShader,
     fragmentShader: FragmentShader,
     side: THREE.DoubleSide,
   });
 
-  const vertices = [];
-  const colors = [];
-  for (let i = 0; i < textureCoordinates.length; i += 3) {
-    vertices.push(
-      textureCoordinates[i].x * 0.5 - textCanvas.width * 0.125,
-      -1 * (textureCoordinates[i].y * 0.5 - textCanvas.height * 0.125),
-      1 * Math.random()
-    );
-    colors.push(
-      textureColors[i].r / 255,
-      textureColors[i].g / 255,
-      textureColors[i].b / 255
-    );
+  const vertices: { x: number; y: number; z: number }[] = [];
+  const colors: { r: number; g: number; b: number }[] = [];
+  for (let i = 0; i < textureCoordinates.length; i++) {
+    vertices.push({
+      x: textureCoordinates[i].x * 0.5 - textCanvas.width * 0.125,
+      y: -1 * (textureCoordinates[i].y * 0.5 - textCanvas.height * 0.125),
+      z: 5 * Math.random(),
+    });
+    colors.push({
+      r: textureColors[i].r / 255,
+      g: textureColors[i].g / 255,
+      b: textureColors[i].b / 255,
+    });
   }
-  geometry.setAttribute(
-    'position',
-    new THREE.Float32BufferAttribute(vertices, 3)
+
+  const instancedMesh = new THREE.InstancedMesh(
+    particleGeometry,
+    particleMaterial,
+    vertices.length
   );
-  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-  const particles = new THREE.Points(geometry, material);
-  scene.add(particles);
+  instancedMesh.instanceMatrix.needsUpdate = true;
+  if (instancedMesh.instanceColor) {
+    instancedMesh.instanceColor.needsUpdate = true;
+  }
+  scene.add(instancedMesh);
+
+  for (let i = 0; i < vertices.length; i += 1) {
+    dummy.position.set(vertices[i].x - 50, vertices[i].y + 50, vertices[i].z);
+    dummy.updateMatrix();
+
+    const color = new THREE.Color(colors[i].r, colors[i].g, colors[i].b);
+
+    instancedMesh.setMatrixAt(i, dummy.matrix);
+    instancedMesh.setColorAt(i, color);
+  }
 
   // const startTime = performance.now();
   const loop = () => {
     requestAnimationFrame(loop);
     // const elapsedTime = performance.now() - startTime;
-
-    // plane.material.uniforms.uTime.value = elapsedTime;
-    // plane.material.uniforms.uDuration.value = PARAMS._duration;
 
     renderer.setClearColor(0xcccccc, 1.0);
     renderer.render(scene, camera);
