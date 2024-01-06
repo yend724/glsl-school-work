@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import FragmentShader from '../shader/fragment.frag?raw';
 import VertexShader from '../shader/vertex.vert?raw';
-import DogImg from '../img/dog.png';
+// import DogImg from '../img/dog.png';
 import CatImg from '../img/cat.png';
 import { getWindow, getCanvas, getElement } from './utils';
 import p5 from 'p5';
