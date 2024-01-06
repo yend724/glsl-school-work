@@ -9,22 +9,25 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import FragmentShader from '../shader/fragment.frag?raw';
 import VertexShader from '../shader/vertex.vert?raw';
 // import DogImg from '../img/dog.png';
-import CatImg from '../img/cat.png';
+// import CatImg from '../img/cat.png';
+// import KillerWhale from '../img/killer-whale.png';
+// import WhiteTiger from '../img/white-tiger.png';
+import Eagle from '../img/eagle.png';
 import { getWindow, getCanvas, getElement } from './utils';
 import p5 from 'p5';
 
 const sketch = (p: p5) => {
-  const inputText = 'Cat';
+  const inputText = 'Eagle';
 
-  const fontSizeMax = 16;
+  const fontSizeMax = 24;
   const fontSizeMin = 8;
-  const spacing = 4; // line height
-  const kerning = 0.5; // between letters
+  const spacing = 6; // line height
+  const kerning = 0.2; // between letters
 
   let img: p5.Image;
 
   p.preload = () => {
-    img = p.loadImage(CatImg);
+    img = p.loadImage(Eagle);
   };
 
   p.setup = () => {
@@ -39,7 +42,7 @@ const sketch = (p: p5) => {
     p.background(255);
 
     let x = 0;
-    let y = 10;
+    let y = 0;
     let counter = 0;
 
     while (y < p.height) {
@@ -139,7 +142,7 @@ const webglInit = async () => {
       const b = imgData.data[i + 2];
 
       const greyscale = r * 0.222 + g * 0.707 + b * 0.071;
-      if (greyscale > 254) continue;
+      if (greyscale > 240) continue;
 
       textureCoordinates.push({ x, y });
       textureColors.push({ r, g, b });
@@ -147,7 +150,7 @@ const webglInit = async () => {
   }
 
   const dummy = new THREE.Object3D();
-  const particleGeometry = new THREE.IcosahedronGeometry(0.4, 0);
+  const particleGeometry = new THREE.IcosahedronGeometry(0.5, 0);
   const particleMaterial = new THREE.ShaderMaterial({
     uniforms: {
       uTime: {
@@ -210,7 +213,7 @@ const webglInit = async () => {
     particleMaterial.uniforms.uTime.value = elapsedTime * 0.001;
     particleMaterial.uniforms.uProgress.value = PARAMS.progress;
 
-    renderer.setClearColor(0xcccccc, 1.0);
+    renderer.setClearColor(0xffffff, 1.0);
     renderer.render(scene, camera);
 
     controls.update();
