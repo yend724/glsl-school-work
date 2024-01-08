@@ -1,7 +1,6 @@
 uniform float uProgress;
 uniform float uTime;
 attribute vec3 color;
-varying vec4 vWorldPosition;
 varying vec3 vColor;
 
  float rand(vec2 co) {
@@ -9,14 +8,18 @@ varying vec3 vColor;
   }
 
 void main() {
-  float xtime = sin(uTime * 100.);
-  float ytime = cos(uTime * 100.);
   mat4 mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
   mat4 imvpMatrix = mvpMatrix * instanceMatrix;
-  float random = rand(instanceMatrix[3].xz);
 
-  vec3 pos = vec3(position.x + random * xtime * 5.0 * uProgress, position.y + random * ytime * 5.0 * uProgress, position.z);
-  gl_Position = imvpMatrix * vec4(pos, 1.0);
+  float xTime = sin(uTime * 50.0);
+  float yTime = cos(uTime * 50.0);
+  float zTime = sin(uTime * 50.0);
+
+  float random = rand(instanceMatrix[3].xy);
+  float posX = position.x + random * xTime * 3.0 * uProgress;
+  float posY = position.y + random * yTime * 3.0 * uProgress;
+  float posZ = position.z + random * zTime * 10.0 * uProgress;
+
+  gl_Position = imvpMatrix * vec4(posX, posY, posZ, 1.0);
   vColor = instanceColor;
-  vWorldPosition = imvpMatrix * vec4(position, 1.0);
 }

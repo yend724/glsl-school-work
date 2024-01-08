@@ -13,6 +13,19 @@ export const getCanvas = () => {
   }
   return canvas;
 };
+export const removeCanvas = (id: string) => {
+  const canvas = document.querySelector<HTMLCanvasElement>('#' + id);
+  if (canvas === null) {
+    throw new Error('canvas is null');
+  }
+  document.body.removeChild(canvas);
+};
+export const createCanvas = (id: string) => {
+  const canvas = document.createElement('canvas');
+  canvas.id = id;
+  document.body.appendChild(canvas);
+  return canvas;
+};
 export const getElement = <T extends HTMLElement>(selector: string) => {
   const element = document.querySelector<T>(selector);
   if (element === null) {
