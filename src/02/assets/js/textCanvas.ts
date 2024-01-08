@@ -7,6 +7,7 @@ import Penguin from '../img/penguin.png';
 import Panda from '../img/panda.png';
 import { getQueryParameters } from './url';
 
+const canvasDrawCompleted = new CustomEvent('canvas-draw-complete');
 export const inputList = [
   {
     text: 'Eagle',
@@ -95,10 +96,16 @@ const sketch = (p: p5) => {
         y += spacing;
       }
     }
+    window.dispatchEvent(canvasDrawCompleted);
     p.noLoop();
   };
 };
 
-export const sketchInit = () => {
-  return new p5(sketch);
+export const sketchInit = (): Promise<HTMLCanvasElement> => {
+  return new Promise(resolve => {
+    const p = new p5(sketch);
+    window.addEventListener('canvas-draw-complete', () => {
+      resolve(p.drawingContext.canvas);
+    });
+  });
 };

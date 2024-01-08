@@ -7,9 +7,10 @@ import { sketchInit } from './textCanvas';
 import { getElement } from './utils';
 import { webglInit } from './webglCanvas';
 
-sketchInit();
-setTimeout(() => {
+const init = async () => {
+  const textCanvas = await sketchInit();
   webglInit({
-    textCanvas: getElement<HTMLCanvasElement>('#p5js-canvas > canvas')!,
+    textCanvas: textCanvas,
   });
-}, 500);
+};
+init();
