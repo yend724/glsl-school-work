@@ -12,4 +12,4 @@ setTimeout(() => {
   webglInit({
     textCanvas: getElement<HTMLCanvasElement>('#p5js-canvas > canvas')!,
   });
-}, 250);
+}, 500);

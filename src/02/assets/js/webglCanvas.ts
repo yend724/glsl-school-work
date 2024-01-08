@@ -37,14 +37,16 @@ const webglApp = async ({
   const renderer = new THREE.WebGLRenderer({
     canvas,
   });
-  const renderTarget = new THREE.WebGLRenderTarget(1000, 1000);
+  const renderTarget = new THREE.WebGLRenderTarget(1200, 1200);
 
   const scene = new THREE.Scene();
   const sceneOffscreen = new THREE.Scene();
 
   const fov = 60;
+  const fovRad = (fov / 2) * (Math.PI / 180);
+  const dist = 210 / 2 / Math.tan(fovRad);
   const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000);
-  camera.position.set(0, 0, 200);
+  camera.position.set(0, 0, dist);
 
   const cameraOffscreen = camera.clone();
   cameraOffscreen.position.set(0, 0, 180);
@@ -54,6 +56,8 @@ const webglApp = async ({
   const controls = new OrbitControls(camera, renderer.domElement);
 
   const p5canvasCtx = textCanvas.getContext('2d')!;
+  getComputedStyle(textCanvas);
+  const textCanvasMagnification = textCanvas.clientWidth / textCanvas.width;
   const imgData = p5canvasCtx.getImageData(
     0,
     0,
@@ -79,8 +83,8 @@ const webglApp = async ({
       const greyscale = r * 0.222 + g * 0.707 + b * 0.071;
       if (greyscale > 240) continue;
 
-      const _x = x * 0.5 - textCanvas.width * 0.125;
-      const _y = -1 * (y * 0.5 - textCanvas.height * 0.125);
+      const _x = x;
+      const _y = -1 * y;
       const _z = Math.random() * 2 - 1;
       textureCoordinates.push({ x: _x, y: _y, z: _z });
       textureColors.push({ r: r / 255, g: g / 255, b: b / 255 });
@@ -113,11 +117,15 @@ const webglApp = async ({
   }
   for (let i = 0; i < textureCoordinates.length; i++) {
     const position = {
-      x: textureCoordinates[i].x - 50,
-      y: textureCoordinates[i].y + 50,
+      x: textureCoordinates[i].x - textCanvas.width * 0.5,
+      y: textureCoordinates[i].y + textCanvas.height * 0.5,
       z: textureCoordinates[i].z,
     };
-    obj.position.set(position.x, position.y, position.z);
+    obj.position.set(
+      position.x * textCanvasMagnification,
+      position.y * textCanvasMagnification,
+      position.z
+    );
     obj.updateMatrix();
 
     const color = new THREE.Color(
