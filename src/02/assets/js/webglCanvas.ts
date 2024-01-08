@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import FragmentShader from '../shader/fragment.frag?raw';
-import VertexShader from '../shader/vertex.vert?raw';
+import TextureFragmentShader from '../shader/texture.frag?raw';
+import TextureVertexShader from '../shader/texture.vert?raw';
+import TextParticleFragmentShader from '../shader/textParticle.frag?raw';
+import TextParticleVertexShader from '../shader/textParticle.vert?raw';
 import { getWindow, createCanvas } from './utils';
 import { parameterInit } from './parameter';
 import Wood from '../img/wood.png';
@@ -102,8 +104,8 @@ const webglApp = async ({
         value: PARAMS.progress,
       },
     },
-    vertexShader: VertexShader,
-    fragmentShader: FragmentShader,
+    vertexShader: TextParticleVertexShader,
+    fragmentShader: TextParticleFragmentShader,
   });
 
   const instancedMesh = new THREE.InstancedMesh(
@@ -148,21 +150,8 @@ const webglApp = async ({
     uniforms: {
       uTexture: { value: renderTarget.texture },
     },
-    vertexShader: `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform sampler2D uTexture;
-      varying vec2 vUv;
-      void main() {
-        vec4 color = texture2D(uTexture, vUv);
-        gl_FragColor = vec4(color.rgb, 1.0);
-      }
-    `,
+    vertexShader: TextureVertexShader,
+    fragmentShader: TextureFragmentShader,
   });
 
   const pictureFramePaper = new THREE.Mesh(
