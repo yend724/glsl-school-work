@@ -4,7 +4,7 @@ import TextureFragmentShader from '../shader/texture.frag?raw';
 import TextureVertexShader from '../shader/texture.vert?raw';
 import TextParticleFragmentShader from '../shader/textParticle.frag?raw';
 import TextParticleVertexShader from '../shader/textParticle.vert?raw';
-import { getWindow, createCanvas } from './utils';
+import { getWindow } from './utils';
 import { parameterInit } from './parameter';
 import Wood from '../img/wood.png';
 
@@ -27,15 +27,15 @@ const loadTexture = (url: string): Promise<THREE.Texture> => {
 };
 
 const webglApp = async ({
+  canvas,
   textCanvas,
   texture,
 }: {
+  canvas: HTMLCanvasElement;
   textCanvas: HTMLCanvasElement;
   texture: THREE.Texture;
 }) => {
   const { width, height } = getWindow();
-  const canvas = createCanvas('webgl');
-
   const renderer = new THREE.WebGLRenderer({
     canvas,
   });
@@ -60,7 +60,6 @@ const webglApp = async ({
   controls.enablePan = false;
 
   const p5canvasCtx = textCanvas.getContext('2d')!;
-  getComputedStyle(textCanvas);
   const textCanvasMagnification = textCanvas.clientWidth / textCanvas.width;
   const imgData = p5canvasCtx.getImageData(
     0,
@@ -248,14 +247,20 @@ const webglApp = async ({
   };
   onResize();
   window.addEventListener('resize', onResize);
+
+  return {
+    onResize,
+  };
 };
 
 export const webglInit = async ({
+  canvas,
   textCanvas,
 }: {
+  canvas: HTMLCanvasElement;
   textCanvas: HTMLCanvasElement;
 }) => {
-  loadTexture(Wood).then(texture => {
-    webglApp({ textCanvas, texture });
+  return loadTexture(Wood).then(texture => {
+    return webglApp({ canvas, textCanvas, texture });
   });
 };

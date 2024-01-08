@@ -15,3 +15,18 @@ canvas {
   opacity: 0;
   z-index: -1;
 }
+.buttons {
+  position: absolute;
+  bottom: 0;
+  z-index: 10;
+}
+.button {
+  display: inline-block;
+  padding: 0.5em 1em;
+  margin: 0.5em;
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  cursor: pointer;
+  color: #000;
+}
