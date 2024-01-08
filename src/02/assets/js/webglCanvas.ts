@@ -46,7 +46,7 @@ const webglApp = async ({
 
   const fov = 60;
   const fovRad = (fov / 2) * (Math.PI / 180);
-  const dist = 210 / 2 / Math.tan(fovRad);
+  const dist = 300 / 2 / Math.tan(fovRad);
   const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000);
   camera.position.set(0, 0, dist);
 
@@ -56,6 +56,8 @@ const webglApp = async ({
   cameraOffscreen.aspect = 1.0;
 
   const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableZoom = false;
+  controls.enablePan = false;
 
   const p5canvasCtx = textCanvas.getContext('2d')!;
   getComputedStyle(textCanvas);
