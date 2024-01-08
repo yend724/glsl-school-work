@@ -106,6 +106,7 @@ const webglApp = async ({
     },
     vertexShader: TextParticleVertexShader,
     fragmentShader: TextParticleFragmentShader,
+    transparent: true,
   });
 
   const instancedMesh = new THREE.InstancedMesh(
@@ -148,10 +149,17 @@ const webglApp = async ({
   const pictureFramePaperGeometry = new THREE.PlaneGeometry(200, 200);
   const pictureFramePaperMaterial = new THREE.ShaderMaterial({
     uniforms: {
+      uTime: {
+        value: 0.0,
+      },
+      uProgress: {
+        value: PARAMS.progress,
+      },
       uTexture: { value: renderTarget.texture },
     },
     vertexShader: TextureVertexShader,
     fragmentShader: TextureFragmentShader,
+    transparent: true,
   });
 
   const pictureFramePaper = new THREE.Mesh(
@@ -204,8 +212,12 @@ const webglApp = async ({
   const loop = () => {
     requestAnimationFrame(loop);
     const elapsedTime = performance.now() - startTime;
+
     particleMaterial.uniforms.uTime.value = elapsedTime * 0.001;
     particleMaterial.uniforms.uProgress.value = PARAMS.progress;
+
+    pictureFramePaperMaterial.uniforms.uTime.value = elapsedTime * 0.001;
+    pictureFramePaperMaterial.uniforms.uProgress.value = PARAMS.progress;
 
     //オフスクリーンレンダリング
     renderer.setClearColor(0xffffff, 1.0);

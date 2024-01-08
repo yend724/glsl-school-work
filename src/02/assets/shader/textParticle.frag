@@ -1,4 +1,4 @@
-uniform float uTime;
+uniform float uProgress;
 varying vec3 vColor;
 
 void main() {
