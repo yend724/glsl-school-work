@@ -4,12 +4,32 @@ import FragmentShader from '../shader/fragment.frag?raw';
 import VertexShader from '../shader/vertex.vert?raw';
 import { getWindow, createCanvas } from './utils';
 import { parameterInit } from './parameter';
+import Wood from '../img/wood.png';
 
 const { PARAMS } = parameterInit();
-export const webglInit = async ({
+
+const loadTexture = (url: string): Promise<THREE.Texture> => {
+  return new Promise((resolve, reject) => {
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      url,
+      texture => {
+        resolve(texture);
+      },
+      undefined,
+      err => {
+        reject(err);
+      }
+    );
+  });
+};
+
+const webglApp = async ({
   textCanvas,
+  texture,
 }: {
   textCanvas: HTMLCanvasElement;
+  texture: THREE.Texture;
 }) => {
   const { width, height } = getWindow();
   const canvas = createCanvas('webgl');
@@ -17,12 +37,19 @@ export const webglInit = async ({
   const renderer = new THREE.WebGLRenderer({
     canvas,
   });
+  const renderTarget = new THREE.WebGLRenderTarget(1000, 1000);
 
   const scene = new THREE.Scene();
+  const sceneOffscreen = new THREE.Scene();
 
   const fov = 60;
   const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000);
   camera.position.set(0, 0, 200);
+
+  const cameraOffscreen = camera.clone();
+  cameraOffscreen.position.set(0, 0, 180);
+  cameraOffscreen.lookAt(sceneOffscreen.position);
+  cameraOffscreen.aspect = 1.0;
 
   const controls = new OrbitControls(camera, renderer.domElement);
 
@@ -73,7 +100,6 @@ export const webglInit = async ({
     },
     vertexShader: VertexShader,
     fragmentShader: FragmentShader,
-    side: THREE.DoubleSide,
   });
 
   const instancedMesh = new THREE.InstancedMesh(
@@ -85,8 +111,6 @@ export const webglInit = async ({
   if (instancedMesh.instanceColor) {
     instancedMesh.instanceColor.needsUpdate = true;
   }
-  scene.add(instancedMesh);
-
   for (let i = 0; i < textureCoordinates.length; i++) {
     const position = {
       x: textureCoordinates[i].x - 50,
@@ -106,6 +130,79 @@ export const webglInit = async ({
     instancedMesh.setColorAt(i, color);
   }
 
+  sceneOffscreen.add(instancedMesh);
+
+  const pictureFrameGroup = new THREE.Group();
+  scene.add(pictureFrameGroup);
+
+  const pictureFramePaperGeometry = new THREE.PlaneGeometry(200, 200);
+  const pictureFramePaperMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      uTexture: { value: renderTarget.texture },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uTexture;
+      varying vec2 vUv;
+      void main() {
+        vec4 color = texture2D(uTexture, vUv);
+        gl_FragColor = vec4(color.rgb, 1.0);
+      }
+    `,
+  });
+
+  const pictureFramePaper = new THREE.Mesh(
+    pictureFramePaperGeometry,
+    pictureFramePaperMaterial
+  );
+  pictureFramePaper.position.setZ(-2);
+  scene.add(pictureFramePaper);
+
+  const pictureFrameBackGeometry = new THREE.PlaneGeometry(200, 200);
+  const pictureFrameBackMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    side: THREE.DoubleSide,
+  });
+  const pictureFrameBack = new THREE.Mesh(
+    pictureFrameBackGeometry,
+    pictureFrameBackMaterial
+  );
+  pictureFrameBack.position.setZ(-3);
+  scene.add(pictureFrameBack);
+
+  const pictureFrameGeometry = new THREE.BoxGeometry(210, 5, 4);
+  const pictureFrameMaterial = new THREE.MeshBasicMaterial({
+    map: texture,
+  });
+  const pictureFrame = new THREE.Mesh(
+    pictureFrameGeometry,
+    pictureFrameMaterial
+  );
+  pictureFrame.position.setZ(-1);
+  const pictureFrame2 = pictureFrame.clone();
+  const pictureFrame3 = pictureFrame.clone();
+  const pictureFrame4 = pictureFrame.clone();
+
+  pictureFrame.position.setY(102.5);
+  pictureFrame2.position.setY(-102.5);
+  pictureFrame3.position.setX(102.5);
+  pictureFrame3.rotation.z = Math.PI / 2;
+  pictureFrame4.position.setX(-102.5);
+  pictureFrame4.rotation.z = Math.PI / 2;
+
+  pictureFrameGroup.add(
+    pictureFrame,
+    pictureFrame2,
+    pictureFrame3,
+    pictureFrame4
+  );
+
   const startTime = performance.now();
   const loop = () => {
     requestAnimationFrame(loop);
@@ -113,7 +210,13 @@ export const webglInit = async ({
     particleMaterial.uniforms.uTime.value = elapsedTime * 0.001;
     particleMaterial.uniforms.uProgress.value = PARAMS.progress;
 
+    //オフスクリーンレンダリング
     renderer.setClearColor(0xffffff, 1.0);
+    renderer.setRenderTarget(renderTarget);
+    renderer.render(sceneOffscreen, cameraOffscreen);
+    renderer.setRenderTarget(null);
+
+    renderer.setClearColor(0x000000, 1.0);
     renderer.render(scene, camera);
 
     controls.update();
@@ -128,7 +231,20 @@ export const webglInit = async ({
 
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+
+    cameraOffscreen.aspect = 1;
+    cameraOffscreen.updateProjectionMatrix();
   };
   onResize();
   window.addEventListener('resize', onResize);
+};
+
+export const webglInit = async ({
+  textCanvas,
+}: {
+  textCanvas: HTMLCanvasElement;
+}) => {
+  loadTexture(Wood).then(texture => {
+    webglApp({ textCanvas, texture });
+  });
 };
