@@ -1,3 +1,4 @@
+import gsap from 'gsap';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import TextureFragmentShader from '../shader/texture.frag?raw';
@@ -40,6 +41,7 @@ class WebGLApp {
   particleMaterial: THREE.ShaderMaterial;
   pictureFramePaperMaterial: THREE.ShaderMaterial;
   startTime: number;
+
   constructor({
     canvas,
     textCanvas,
@@ -84,6 +86,7 @@ class WebGLApp {
     this.registerEvents = this.registerEvents.bind(this);
     this.removeEvents = this.removeEvents.bind(this);
     this.createShaderMaterials = this.createShaderMaterials.bind(this);
+    this.changeTexture = this.changeTexture.bind(this);
 
     const { particleMaterial, pictureFrameMaterial } =
       this.createShaderMaterials();
@@ -111,18 +114,28 @@ class WebGLApp {
     this.scene.add(pictureFrameGroup);
   };
 
-  reInit = (textCanvas: HTMLCanvasElement) => {
+  changeTexture = (textCanvas: HTMLCanvasElement) => {
     this.textCanvas = textCanvas;
     const { textureCoordinates, textureColors, textCanvasMagnification } =
       this.getTextureCoordinatesFromCanvas(textCanvas);
 
-    this.sceneOffscreen.clear();
-    const instancedMesh = this.createInstancedMesh(
-      textureCoordinates,
-      textureColors,
-      textCanvasMagnification
-    );
-    this.sceneOffscreen.add(instancedMesh);
+    gsap.to(PARAMS, {
+      progress: 1.0,
+      duration: 1.0,
+      onComplete: () => {
+        this.sceneOffscreen.clear();
+        const instancedMesh = this.createInstancedMesh(
+          textureCoordinates,
+          textureColors,
+          textCanvasMagnification
+        );
+        this.sceneOffscreen.add(instancedMesh);
+        gsap.to(PARAMS, {
+          progress: 0.0,
+          duration: 1.0,
+        });
+      },
+    });
   };
 
   render = () => {

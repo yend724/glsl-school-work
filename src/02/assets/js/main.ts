@@ -34,11 +34,15 @@ const init = async (animal: number = 0) => {
 
   Array.from(buttons).forEach(element => {
     element.addEventListener('click', async () => {
+      element.disabled = true;
       const dir = element.dataset.sliderTrigger ?? 'next';
       const nextCount = getNextCount(count, dir);
       await textCanvasInit(textCanvas, nextCount);
-      app.reInit(textCanvas);
+      app.changeTexture(textCanvas);
       count = nextCount;
+      setTimeout(() => {
+        element.disabled = false;
+      }, 2500);
     });
   });
 };

@@ -27,7 +27,7 @@ export const parameterInit = () => {
     options,
     value: 0,
   });
-  // pane.dispose();
+  pane.dispose();
 
   return { pane, PARAMS };
 };
