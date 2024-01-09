@@ -9,24 +9,32 @@ canvas {
   display: block;
   z-index: 1;
 }
-#p5js-canvas canvas {
-  position: absolute;
-  display: block;
-  opacity: 0;
-  z-index: -1;
-}
 .buttons {
   position: absolute;
   bottom: 0;
   z-index: 10;
 }
 .button {
-  display: inline-block;
+  position: fixed;
+  top: 0;
+  display: block;
+  height: 100%;
   padding: 0.5em 1em;
-  margin: 0.5em;
-  background: #eee;
-  border: 1px solid #ccc;
-  border-radius: 3px;
+  background: rgb(22, 22, 22, 0.5);
   cursor: pointer;
-  color: #000;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  z-index: 2;
+}
+.button[data-slider-trigger='prev'] {
+  left: 0;
+}
+.button[data-slider-trigger='next'] {
+  right: 0;
+}
+#text-canvas {
+  position: absolute;
+  visibility: hidden;
+  z-index: -1;
 }

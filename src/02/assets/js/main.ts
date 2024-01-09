@@ -2,31 +2,21 @@ import 'destyle.css';
 import '/assets/css/common.css';
 import '../css/style.css';
 
-import { sketchInit } from './textCanvas';
-import { webglInit } from './webglCanvas';
+import { textCanvasInit } from './textCanvas';
+import { webGLAppInit } from './webglCanvas';
 import { createCanvas } from './utils';
 
-const buttons = document.querySelectorAll<HTMLButtonElement>(
-  '[data-slide-trigger]'
-);
+const textCanvas = createCanvas('text-canvas');
+document.body.appendChild(textCanvas);
 const canvas = createCanvas('webgl');
-let events = () => {};
-const init = async (animal: number = 0) => {
-  const textCanvas = await sketchInit({
-    animal,
-  });
-  const { onResize } = await webglInit({
-    canvas,
-    textCanvas: textCanvas,
-  });
-  textCanvas.remove();
-  events = onResize;
-};
+document.body.appendChild(canvas);
 
-init(0);
+const buttons = document.querySelectorAll<HTMLButtonElement>(
+  '[data-slider-trigger]'
+);
 let count = 0;
 const getNextCount = (count: number, dir: string) => {
-  let result = count + 1;
+  let result = count;
   if (dir === 'next') {
     result = (count + 1) % 6;
   } else {
@@ -34,12 +24,22 @@ const getNextCount = (count: number, dir: string) => {
   }
   return result;
 };
-Array.from(buttons).forEach(element => {
-  element.addEventListener('click', async () => {
-    const dir = element.dataset.slideTrigger ?? 'next';
-    const nextCount = getNextCount(count, dir);
-    window.removeEventListener('resize', events);
-    init(nextCount);
-    count = nextCount;
+
+const init = async (animal: number = 0) => {
+  await textCanvasInit(textCanvas, animal);
+  const app = await webGLAppInit({
+    canvas,
+    textCanvas,
   });
-});
+
+  Array.from(buttons).forEach(element => {
+    element.addEventListener('click', async () => {
+      const dir = element.dataset.sliderTrigger ?? 'next';
+      const nextCount = getNextCount(count, dir);
+      await textCanvasInit(textCanvas, nextCount);
+      app.reInit(textCanvas);
+      count = nextCount;
+    });
+  });
+};
+init(0);

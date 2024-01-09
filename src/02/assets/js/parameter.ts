@@ -1,7 +1,7 @@
 import { Pane } from 'tweakpane';
 import { getQueryParameters } from './url';
 const query = getQueryParameters();
-import { inputList } from './textCanvas';
+import { IMG_INPUT_LIST } from './const';
 
 const PARAMS = {
   progress: 0.0,
@@ -10,7 +10,7 @@ const PARAMS = {
 
 export const parameterInit = () => {
   const pane = new Pane();
-  const options = inputList.map((item, index) => {
+  const options = IMG_INPUT_LIST.map((item, index) => {
     return {
       text: item.text,
       value: index,
@@ -27,6 +27,7 @@ export const parameterInit = () => {
     options,
     value: 0,
   });
+  // pane.dispose();
 
   return { pane, PARAMS };
 };
