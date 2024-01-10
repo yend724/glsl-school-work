@@ -39,7 +39,7 @@ export const textCanvasInit = async (
   const fontSizeMax = 24;
   const fontSizeMin = 8;
   const spacing = 4;
-  const kerning = 0.5;
+  const kerning = 0.8;
 
   canvas.width = 400;
   canvas.height = 400;

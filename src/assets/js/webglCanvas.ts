@@ -8,6 +8,7 @@ import TextParticleVertexShader from '../shader/textParticle.vert?raw';
 import { getWindow } from './utils';
 import { parameterInit } from './parameter';
 import Wood from '../img/wood.png';
+import { IMG_INPUT_LIST } from './const';
 
 const { PARAMS } = parameterInit();
 
@@ -30,7 +31,8 @@ const loadTexture = (url: string): Promise<THREE.Texture> => {
 class WebGLApp {
   canvas: HTMLCanvasElement;
   textCanvas: HTMLCanvasElement;
-  texture: THREE.Texture;
+  woodTexture: THREE.Texture;
+  animalTexture: THREE.Texture;
   renderer: THREE.WebGLRenderer;
   rendererOffscreen: THREE.WebGLRenderTarget;
   scene: THREE.Scene;
@@ -45,15 +47,18 @@ class WebGLApp {
   constructor({
     canvas,
     textCanvas,
-    texture,
+    woodTexture,
+    animalTexture,
   }: {
     canvas: HTMLCanvasElement;
     textCanvas: HTMLCanvasElement;
-    texture: THREE.Texture;
+    woodTexture: THREE.Texture;
+    animalTexture: THREE.Texture;
   }) {
     this.canvas = canvas;
     this.textCanvas = textCanvas;
-    this.texture = texture;
+    this.woodTexture = woodTexture;
+    this.animalTexture = animalTexture;
 
     const { width, height } = getWindow();
 
@@ -86,6 +91,7 @@ class WebGLApp {
     this.render = this.render.bind(this);
     this.createShaderMaterials = this.createShaderMaterials.bind(this);
     this.changeTexture = this.changeTexture.bind(this);
+    this.changeAnswer = this.changeAnswer.bind(this);
     this.onResize = this.onResize.bind(this);
     this.registerEvents = this.registerEvents.bind(this);
     this.removeEvents = this.removeEvents.bind(this);
@@ -114,40 +120,8 @@ class WebGLApp {
 
     const pictureFrameGroup = this.createPictureFrame();
     this.scene.add(pictureFrameGroup);
-  };
 
-  changeTexture = (textCanvas: HTMLCanvasElement) => {
-    this.textCanvas = textCanvas;
-    const { textureCoordinates, textureColors, textCanvasMagnification } =
-      this.getTextureCoordinatesFromCanvas(textCanvas);
-
-    return new Promise(resolve => {
-      var tl = gsap.timeline();
-      tl.to(PARAMS, {
-        progress: 1.0,
-        duration: 1.5,
-        ease: 'power3.in',
-        onComplete: () => {
-          this.sceneOffscreen.clear();
-          const instancedMesh = this.createInstancedMesh(
-            textureCoordinates,
-            textureColors,
-            textCanvasMagnification
-          );
-          this.sceneOffscreen.add(instancedMesh);
-        },
-      });
-      tl.to(PARAMS, {
-        progress: 0.0,
-        duration: 1.5,
-        ease: 'power3.out',
-        onComplete: () => {
-          resolve({
-            status: 'success',
-          });
-        },
-      });
-    });
+    this.changeAnswer(0);
   };
 
   render = () => {
@@ -188,6 +162,45 @@ class WebGLApp {
 
     this.cameraOffscreen.aspect = 1;
     this.cameraOffscreen.updateProjectionMatrix();
+  };
+
+  changeTexture = async (
+    textCanvas: HTMLCanvasElement,
+    animalIndex: number
+  ) => {
+    this.changeAnswer(animalIndex);
+    this.textCanvas = textCanvas;
+
+    const { textureCoordinates, textureColors, textCanvasMagnification } =
+      this.getTextureCoordinatesFromCanvas(textCanvas);
+
+    return new Promise(resolve => {
+      const tl = gsap.timeline();
+      tl.to(PARAMS, {
+        progress: 1.0,
+        duration: 1.5,
+        ease: 'power3.in',
+        onComplete: () => {
+          this.sceneOffscreen.clear();
+          const instancedMesh = this.createInstancedMesh(
+            textureCoordinates,
+            textureColors,
+            textCanvasMagnification
+          );
+          this.sceneOffscreen.add(instancedMesh);
+        },
+      });
+      tl.to(PARAMS, {
+        progress: 0.0,
+        duration: 1.5,
+        ease: 'power3.out',
+        onComplete: () => {
+          resolve({
+            status: 'success',
+          });
+        },
+      });
+    });
   };
 
   getTextureCoordinatesFromCanvas = (canvas: HTMLCanvasElement) => {
@@ -303,6 +316,29 @@ class WebGLApp {
     return { particleMaterial, pictureFrameMaterial };
   };
 
+  changeAnswer = async (animalIndex: number) => {
+    if (this.animalTexture) {
+      this.animalTexture.dispose();
+    }
+    this.scene.children.forEach(child => {
+      if (child.name === 'answer') {
+        this.scene.remove(child);
+      }
+    });
+    const currentAnimal = IMG_INPUT_LIST[animalIndex];
+    this.animalTexture = await loadTexture(currentAnimal.img);
+
+    const answerGeometry = new THREE.PlaneGeometry(200, 200);
+    const answerMaterial = new THREE.MeshBasicMaterial();
+    const answer = new THREE.Mesh(answerGeometry, answerMaterial);
+    answer.position.setZ(-3.1);
+    answer.scale.set(0.6, 0.6, 1);
+    answer.rotation.y = Math.PI;
+    answer.material.map = this.animalTexture;
+    answer.name = 'answer';
+    this.scene.add(answer);
+  };
+
   createPictureFrame = () => {
     const pictureFrameGroup = new THREE.Group();
 
@@ -315,26 +351,26 @@ class WebGLApp {
     pictureFrameGroup.add(pictureFramePaper);
 
     const pictureFrameBackGeometry = new THREE.PlaneGeometry(200, 200);
-    const pictureFrameBackMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      side: THREE.DoubleSide,
-    });
+    const pictureFrameBackMaterial = new THREE.MeshBasicMaterial();
     const pictureFrameBack = new THREE.Mesh(
       pictureFrameBackGeometry,
       pictureFrameBackMaterial
     );
     pictureFrameBack.position.setZ(-3);
+    pictureFrameBack.rotation.y = Math.PI;
     pictureFrameGroup.add(pictureFrameBack);
 
     const pictureFrameGeometry = new THREE.BoxGeometry(210, 5, 4);
     const pictureFrameMaterial = new THREE.MeshBasicMaterial({
-      map: this.texture,
+      map: this.woodTexture,
     });
     const pictureFrame = new THREE.Mesh(
       pictureFrameGeometry,
       pictureFrameMaterial
     );
+
     pictureFrame.position.setZ(-1);
+
     const pictureFrame2 = pictureFrame.clone();
     const pictureFrame3 = pictureFrame.clone();
     const pictureFrame4 = pictureFrame.clone();
@@ -372,6 +408,7 @@ export const webGLAppInit = async ({
   canvas: HTMLCanvasElement;
   textCanvas: HTMLCanvasElement;
 }) => {
-  const texture = await loadTexture(Wood);
-  return new WebGLApp({ canvas, textCanvas, texture });
+  const woodTexture = await loadTexture(Wood);
+  const animalTexture = await loadTexture(IMG_INPUT_LIST[0].img);
+  return new WebGLApp({ canvas, textCanvas, woodTexture, animalTexture });
 };
