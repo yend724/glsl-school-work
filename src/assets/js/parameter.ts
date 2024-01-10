@@ -1,11 +1,9 @@
 import { Pane } from 'tweakpane';
-import { getQueryParameters } from './url';
-const query = getQueryParameters();
 import { IMG_INPUT_LIST } from './const';
 
 const PARAMS = {
   progress: 0.0,
-  activeAnimalIndex: query.animal ? Number(query.animal) : 0,
+  activeAnimalIndex: 0,
 };
 
 export const parameterInit = () => {
