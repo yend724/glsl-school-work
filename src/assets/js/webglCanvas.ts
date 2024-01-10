@@ -351,13 +351,14 @@ class WebGLApp {
     pictureFrameGroup.add(pictureFramePaper);
 
     const pictureFrameBackGeometry = new THREE.PlaneGeometry(200, 200);
-    const pictureFrameBackMaterial = new THREE.MeshBasicMaterial();
+    const pictureFrameBackMaterial = new THREE.MeshBasicMaterial({
+      side: THREE.DoubleSide,
+    });
     const pictureFrameBack = new THREE.Mesh(
       pictureFrameBackGeometry,
       pictureFrameBackMaterial
     );
     pictureFrameBack.position.setZ(-3);
-    pictureFrameBack.rotation.y = Math.PI;
     pictureFrameGroup.add(pictureFrameBack);
 
     const pictureFrameGeometry = new THREE.BoxGeometry(210, 5, 4);
