@@ -331,7 +331,7 @@ class WebGLApp {
     const answerGeometry = new THREE.PlaneGeometry(200, 200);
     const answerMaterial = new THREE.MeshBasicMaterial();
     const answer = new THREE.Mesh(answerGeometry, answerMaterial);
-    answer.position.setZ(-3.1);
+    answer.position.setZ(-3.5);
     answer.scale.set(0.6, 0.6, 1);
     answer.rotation.y = Math.PI;
     answer.material.map = this.animalTexture;
