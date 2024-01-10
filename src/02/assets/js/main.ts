@@ -4,16 +4,14 @@ import '../css/style.css';
 
 import { textCanvasInit } from './textCanvas';
 import { webGLAppInit } from './webglCanvas';
-import { createCanvas } from './utils';
+import { createCanvas, getElements } from './utils';
 
 const textCanvas = createCanvas('text-canvas');
 document.body.appendChild(textCanvas);
 const canvas = createCanvas('webgl');
 document.body.appendChild(canvas);
 
-const buttons = document.querySelectorAll<HTMLButtonElement>(
-  '[data-slider-trigger]'
-);
+const buttons = getElements<HTMLButtonElement>('[data-slider-trigger]');
 let count = 0;
 const getNextCount = (count: number, dir: string) => {
   let result = count;
@@ -24,7 +22,6 @@ const getNextCount = (count: number, dir: string) => {
   }
   return result;
 };
-
 const init = async (animal: number = 0) => {
   await textCanvasInit(textCanvas, animal);
   const app = await webGLAppInit({
@@ -34,15 +31,19 @@ const init = async (animal: number = 0) => {
 
   Array.from(buttons).forEach(element => {
     element.addEventListener('click', async () => {
-      element.disabled = true;
+      buttons.forEach(button => {
+        button.disabled = true;
+      });
+
       const dir = element.dataset.sliderTrigger ?? 'next';
       const nextCount = getNextCount(count, dir);
       await textCanvasInit(textCanvas, nextCount);
-      app.changeTexture(textCanvas);
+      await app.changeTexture(textCanvas);
       count = nextCount;
-      setTimeout(() => {
-        element.disabled = false;
-      }, 2500);
+
+      buttons.forEach(button => {
+        button.disabled = false;
+      });
     });
   });
 };

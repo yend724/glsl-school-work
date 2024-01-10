@@ -62,19 +62,21 @@ class WebGLApp {
       canvas: this.canvas,
     });
     this.rendererOffscreen = new THREE.WebGLRenderTarget(1200, 1200);
+
     this.scene = new THREE.Scene();
     this.sceneOffscreen = new THREE.Scene();
 
+    const aspect = Math.min(width / height, 1);
     const fov = 60;
     const fovRad = (fov / 2) * (Math.PI / 180);
-    const dist = 300 / 2 / Math.tan(fovRad);
+    const dist = (210 * 0.6) / aspect / Math.tan(fovRad);
     this.camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000);
     this.camera.position.set(0, 0, dist);
 
     this.cameraOffscreen = this.camera.clone();
     this.cameraOffscreen.position.set(0, 0, 180);
     this.cameraOffscreen.lookAt(this.sceneOffscreen.position);
-    this.cameraOffscreen.aspect = 1.0;
+    this.cameraOffscreen.aspect = 1;
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableZoom = false;
@@ -82,11 +84,11 @@ class WebGLApp {
 
     this.init = this.init.bind(this);
     this.render = this.render.bind(this);
+    this.createShaderMaterials = this.createShaderMaterials.bind(this);
+    this.changeTexture = this.changeTexture.bind(this);
     this.onResize = this.onResize.bind(this);
     this.registerEvents = this.registerEvents.bind(this);
     this.removeEvents = this.removeEvents.bind(this);
-    this.createShaderMaterials = this.createShaderMaterials.bind(this);
-    this.changeTexture = this.changeTexture.bind(this);
 
     const { particleMaterial, pictureFrameMaterial } =
       this.createShaderMaterials();
@@ -119,22 +121,32 @@ class WebGLApp {
     const { textureCoordinates, textureColors, textCanvasMagnification } =
       this.getTextureCoordinatesFromCanvas(textCanvas);
 
-    gsap.to(PARAMS, {
-      progress: 1.0,
-      duration: 1.0,
-      onComplete: () => {
-        this.sceneOffscreen.clear();
-        const instancedMesh = this.createInstancedMesh(
-          textureCoordinates,
-          textureColors,
-          textCanvasMagnification
-        );
-        this.sceneOffscreen.add(instancedMesh);
-        gsap.to(PARAMS, {
-          progress: 0.0,
-          duration: 1.0,
-        });
-      },
+    return new Promise(resolve => {
+      var tl = gsap.timeline();
+      tl.to(PARAMS, {
+        progress: 1.0,
+        duration: 1.5,
+        ease: 'power3.in',
+        onComplete: () => {
+          this.sceneOffscreen.clear();
+          const instancedMesh = this.createInstancedMesh(
+            textureCoordinates,
+            textureColors,
+            textCanvasMagnification
+          );
+          this.sceneOffscreen.add(instancedMesh);
+        },
+      });
+      tl.to(PARAMS, {
+        progress: 0.0,
+        duration: 1.5,
+        ease: 'power3.out',
+        onComplete: () => {
+          resolve({
+            status: 'success',
+          });
+        },
+      });
     });
   };
 
@@ -166,6 +178,11 @@ class WebGLApp {
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
+    const aspect = Math.min(width / height, 1);
+    const fov = 60;
+    const fovRad = (fov / 2) * (Math.PI / 180);
+    const dist = (210 * 0.6) / aspect / Math.tan(fovRad);
+    this.camera.position.set(0, 0, dist);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
 
